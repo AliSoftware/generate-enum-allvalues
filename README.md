@@ -36,7 +36,7 @@ The Swift script will use the AST analysis from SourceKitten to find all the `en
 
 ## Example
 
-Imagine you have the following source code:
+Imagine you have the following `model.swift` source code:
 
 ```swift
 // Some demo code that will be analyzed by SourceKitten + the genum Swift script
@@ -89,10 +89,10 @@ class Foo {
 Then running the command:
 
 ```sh
-sourcekitten structure --file model.swift | path/to/generate-enum-allValues >allValues.generated.swift
+sourcekitten structure --file model.swift | generate-enum-allValues >allValues.generated.swift
 ```
 
-Will generate the following `allValues.generate.swift` content:
+Will generate the following `allValues.generate.swift` output content:
 
 ```swift
 extension Boolish {
@@ -109,7 +109,7 @@ extension Foo.CardSymbol {
 }
 ```
 
-And thus you could then do some stuff like this in your code:
+And thus you could then do some stuff like this elsewhere in your code:
 
 ```swift
 print("- Boolish         :", Boolish.allValues.map { $0.rawValue })
@@ -118,7 +118,7 @@ print("- Foo.Direction   :", Foo.Direction.allValues)
 print("- Foo.CardSymbol  :", Foo.CardSymbol.allValues.map { $0.rawValue })
 ```
 
-And when you run your code, that will print:
+So that when you run your code, it will print:
 
 ```
 - Boolish         : [1, 0, 2]
