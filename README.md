@@ -39,6 +39,8 @@ The Swift script will use the AST analysis from SourceKitten to find all the `en
 Imagine you have the following source code:
 
 ```swift
+// Some demo code that will be analyzed by SourceKitten + the genum Swift script
+
 protocol CasesEnumerable {}
 
 enum Boolish: Int, CasesEnumerable {
@@ -49,16 +51,17 @@ enum Boolish: Int, CasesEnumerable {
 
 struct Deep {
   enum Nested {
-    enum Keys: CasesEnumerable {
+    enum Key: CasesEnumerable {
       case `public`
       case `private`
     }
   }
 }
 
+//: FooClass
 class Foo {
 
-  enum Directions: CasesEnumerable {
+  enum Direction: CasesEnumerable {
     case north, south
     case east
     case west
@@ -69,10 +72,18 @@ class Foo {
     case so, wont, be, extended
   }
 
+  enum CardSymbol: Character, CasesEnumerable {
+    case hearts = "\u{2661}"
+    case spades = "\u{2664}"
+    case clubs = "\u{2667}"
+    case diamonds = "\u{2662}"
+  }
+
   func bar(value: String) -> Int {
     return 42
   }
 }
+
 ```
 
 Then running the command:
@@ -87,32 +98,39 @@ Will generate the following `allValues.generate.swift` content:
 extension Boolish {
   static let allValues: [Boolish] = [.Yeah, .Nah, .Meh]
 }
-extension Deep.Nested.Keys {
-  static let allValues: [Deep.Nested.Keys] = [.public, .private]
+extension Deep.Nested.Key {
+  static let allValues: [Deep.Nested.Key] = [.public, .private]
 }
-extension Foo.Directions {
-  static let allValues: [Foo.Directions] = [.north, .south, .east, .west]
+extension Foo.Direction {
+  static let allValues: [Foo.Direction] = [.north, .south, .east, .west]
+}
+extension Foo.CardSymbol {
+  static let allValues: [Foo.CardSymbol] = [.hearts, .spades, .clubs, .diamonds]
 }
 ```
 
 And thus you could then do some stuff like this in your code:
 
 ```swift
-print("Boolish values: \(Boolish.allValues.map { $0.rawValue })")
-print("Deep.Nested.Keys values: \(Deep.Nested.Keys.allValues)")
-print("Foo.Directions = \(Foo.Directions.allValues)")
+print("- Boolish         :", Boolish.allValues.map { $0.rawValue })
+print("- Deep.Nested.Key :", Deep.Nested.Key.allValues)
+print("- Foo.Direction   :", Foo.Direction.allValues)
+print("- Foo.CardSymbol  :", Foo.CardSymbol.allValues.map { $0.rawValue })
 ```
 
 And when you run your code, that will print:
 
 ```
-Boolish values: [1, 0, 2]
-Deep.Nested.Keys values: [main.Deep.Nested.Keys.public, main.Deep.Nested.Keys.private]
-Foo.Directions = [main.Foo.Directions.north, main.Foo.Directions.south, main.Foo.Directions.east, main.Foo.Directions.west]
+- Boolish         : [1, 0, 2]
+- Deep.Nested.Key : [main.Deep.Nested.Key.public, main.Deep.Nested.Key.private]
+- Foo.Direction   : [main.Foo.Direction.north, main.Foo.Direction.south, main.Foo.Direction.east, main.Foo.Direction.west]
+- Foo.CardSymbol  : ["♡", "♤", "♧", "♢"]
 ```
 
-You can find this example in the `./example` directory of that repo, and you can try it out using the `run_demo.sh` shell script, which invokes SourceKitten + the `generate-enum-allValues` Script then `cat` everything in a single `swift` file to interpret and run it and print the values.
+> You can find this example in the `./example` directory of that repo, and you can try it out using the `run_demo.sh` shell script (which invokes SourceKitten + the `generate-enum-allValues` Script, then `cat` everything in a single `swift` file to interpret and run it and print the values).
 
+
+---
 
 ## Future Improvements ideas
 
