@@ -14,6 +14,10 @@ This tiny Swift script allows to generate an implementation for `static let allV
 * For every `enum` for which you want an `allValues` implementation, mark them as conforming to this `CasesEnumerable` protocol
 * Run `sourcekitten structure` on your source code and pipe the result to the `generate-enum-allValues` Swift script to generate the implementation
 
+```sh
+sourcekitten structure --file inputfile.swift | generate-enum-allValues
+```
+
 The Swift script will use the AST analysis from SourceKitten to find all the `enum` in your code that conform to `CasesEnumerable`, go over all the `case` declarations they contain, and generate the appropriate implementation for the `static let allValues` property in an `extension`.
 
 ## Example
@@ -38,7 +42,6 @@ struct Deep {
   }
 }
 
-//: FooClass
 class Foo {
 
   enum Directions: CasesEnumerable {
@@ -66,7 +69,7 @@ sourcekitten structure --file model.swift | path/to/generate-enum-allValues >all
 
 Will generate the following `allValues.generate.swift` content:
 
-```
+```swift
 extension Boolish {
   static let allValues: [Boolish] = [.Yeah, .Nah, .Meh]
 }
@@ -78,12 +81,20 @@ extension Foo.Directions {
 }
 ```
 
-And thus you could then do some stuff like:
+And thus you could then do some stuff like this in your code:
 
 ```swift
 print("Boolish values: \(Boolish.allValues.map { $0.rawValue })")
 print("Deep.Nested.Keys values: \(Deep.Nested.Keys.allValues)")
 print("Foo.Directions = \(Foo.Directions.allValues)")
+```
+
+And when you run your code, that will print:
+
+```
+Boolish values: [1, 0, 2]
+Deep.Nested.Keys values: [main.Deep.Nested.Keys.public, main.Deep.Nested.Keys.private]
+Foo.Directions = [main.Foo.Directions.north, main.Foo.Directions.south, main.Foo.Directions.east, main.Foo.Directions.west]
 ```
 
 You can find this example in the `./example` directory of that repo, and you can try it out using the `run_demo.sh` shell script, which invokes SourceKitten + the `generate-enum-allValues` Script then `cat` everything in a single `swift` file to interpret and run it and print the values.
