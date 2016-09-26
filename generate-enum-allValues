@@ -1,0 +1,62 @@
+#!/usr/bin/xcrun -sdk macosx swift
+
+import Foundation
+
+private let ProtocolName = "CasesEnumerable"
+
+typealias JSON = Dictionary<String, Any>
+
+private class EnumDef {
+  let name: String
+  var cases: [String] = []
+  init(name: String) {
+    self.name = name
+  }
+  var allValuesExtensionDefinition: String {
+    let list = cases.map({ ".\($0)" }).joined(separator: ", ")
+    return "extension \(name) {\n  static let allValues: [\(name)] = [\(list)]\n}"
+  }
+}
+
+private func parseSubstructure(dict: JSON, namePath: [String], enumDef: EnumDef?) {
+  let kind = dict["key.kind"] as? String
+  let substructs = dict["key.substructure"] as? [JSON]
+  let name = dict["key.name"] as? String
+  let conforms = (dict["key.inheritedtypes"] as? [JSON])?.filter({ $0["key.name"] as? String == ProtocolName }).isEmpty == false
+
+  var fullPath = namePath
+  if let name = name { fullPath.append(name) }
+
+  if kind == "source.lang.swift.decl.enum", conforms, let substructs = substructs {
+    let newEnumDef = EnumDef(name: fullPath.joined(separator: "."))
+    substructs.forEach { parseSubstructure(dict: $0, namePath: fullPath, enumDef: newEnumDef) }
+    print(newEnumDef.allValuesExtensionDefinition)
+  } else if let currentDef = enumDef, kind == "source.lang.swift.decl.enumelement", let caseName = name {
+    currentDef.cases.append(caseName)
+  } else if let substructs = substructs {    
+    substructs.forEach { parseSubstructure(dict: $0, namePath: fullPath, enumDef: enumDef) }
+  }
+}
+
+
+
+// MARK: Main
+
+do {
+  let inputData: Data
+  if let file = CommandLine.arguments.dropFirst().first {
+    inputData = try Data(contentsOf: URL(fileURLWithPath: file))
+  } else {
+    inputData = FileHandle.standardInput.readDataToEndOfFile()
+  }
+
+  let anyJson = try JSONSerialization.jsonObject(with: inputData)
+  guard let json = anyJson as? JSON else {
+    print("Unexpected JSON format")
+    exit(3)
+  }
+  parseSubstructure(dict: json, namePath: [], enumDef: nil)
+} catch {
+  print("Unable to read input file: \(error)")
+  exit(2)
+}
