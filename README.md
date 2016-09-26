@@ -85,3 +85,5 @@ print("Boolish values: \(Boolish.allValues.map { $0.rawValue })")
 print("Deep.Nested.Keys values: \(Deep.Nested.Keys.allValues)")
 print("Foo.Directions = \(Foo.Directions.allValues)")
 ```
+
+You can find this example in the `./example` directory of that repo, and you can try it out using the `run_demo.sh` shell script, which invokes SourceKitten + the `generate-enum-allValues` Script then `cat` everything in a single `swift` file to interpret and run it and print the values.
