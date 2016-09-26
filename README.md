@@ -1,8 +1,22 @@
-# generate-enum-values
+# generate-enum-allValues
 
 This tiny Swift script allows to generate an implementation for `static let allValues: [Self]` on all `enum` that are marked as conforming to `CasesEnumerable`
 
-## Requirements
+This way if you declare:
+
+```swift
+enum Directons: CasesEnumerable { case north, south, east, west }
+```
+
+The script will be able to generate:
+
+```swift
+extension Directions {
+  static let allValues: [Directions] = [.north, .south, .east, .west]
+}
+```
+
+## Requirements / Installation
 
 * Install [SourceKitten](https://github.com/jpsim/SourceKitten)
 * Download the `generate-enum-allValues` Swift script
@@ -98,3 +112,17 @@ Foo.Directions = [main.Foo.Directions.north, main.Foo.Directions.south, main.Foo
 ```
 
 You can find this example in the `./example` directory of that repo, and you can try it out using the `run_demo.sh` shell script, which invokes SourceKitten + the `generate-enum-allValues` Script then `cat` everything in a single `swift` file to interpret and run it and print the values.
+
+
+## Future Improvements ideas
+
+1. I hoped at first that this script would be able to use `SourceKittenFramework` (which happen to be included in SwiftLint so you probably already have it on your machine already) to parse the AST instead of requiring the user to invoke `sourcekitten structure` on the command line themselves.
+Unfortunately, I haven't succeeded in importing the Framework from the script as easily as I thought just yet.
+
+2. For this first version, I've decided to make this `allValues` generation opt-in, by only generating the extension for enums that are explicitly marked as `CasesEnumerable` directly. This is a deliberate choice, to avoid the risk of generating too much useless code if you were to generate `allValues` for all your enums even for those for which you don't need it
+
+  * I don't analyze the whole inheritance tree of the `enum`, just the list of its direct conformances, so `protocol Foo: CasesEnumerable` + `enum Bar: Foo` won't be matched
+  * The script could easily changed if you don't want this filtering and instead generate the `allValues` for _all_ the `enums` in your code. That's just a design choice.
+  * So in a future version maybe a command line flag or something could be added to allow the user to specify if they want to filter `enum` by a given protocol and even provide the protocol name themselves
+
+3. Every other interesting idea is welcome, don't hesitate to contribute. The script is quite small and all written in Swift, so it should be fairly easy to understand and contribute 😉
