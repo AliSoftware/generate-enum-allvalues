@@ -13,7 +13,7 @@ enum Boolish: Int, CasesEnumerable {
 
 struct Deep {
   enum Nested {
-    enum Keys: CasesEnumerable {
+    enum Key: CasesEnumerable {
       case `public`
       case `private`
     }
@@ -23,7 +23,7 @@ struct Deep {
 //: FooClass
 class Foo {
 
-  enum Directions: CasesEnumerable {
+  enum Direction: CasesEnumerable {
     case north, south
     case east
     case west
@@ -32,6 +32,13 @@ class Foo {
   enum Silent {
     case does, not, conform, to, magic, proto
     case so, wont, be, extended
+  }
+
+  enum CardSymbol: Character, CasesEnumerable {
+    case hearts = "\u{2661}"
+    case spades = "\u{2664}"
+    case clubs = "\u{2667}"
+    case diamonds = "\u{2662}"
   }
 
   func bar(value: String) -> Int {

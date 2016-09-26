@@ -18,23 +18,29 @@ private class EnumDef {
   }
 }
 
-private func parseSubstructure(dict: JSON, namePath: [String], enumDef: EnumDef?) {
+private func parseSubstructure(dict: JSON, namespaces: [String], currentEnum: EnumDef?) {
+  // Extract some key properties of the current substructure
   let kind = dict["key.kind"] as? String
   let substructs = dict["key.substructure"] as? [JSON]
   let name = dict["key.name"] as? String
   let conforms = (dict["key.inheritedtypes"] as? [JSON])?.filter({ $0["key.name"] as? String == ProtocolName }).isEmpty == false
 
-  var fullPath = namePath
-  if let name = name { fullPath.append(name) }
+  // Build the full-qualified name
+  var fqNames = namespaces
+  if let name = name { fqNames.append(name) }
 
   if kind == "source.lang.swift.decl.enum", conforms, let substructs = substructs {
-    let newEnumDef = EnumDef(name: fullPath.joined(separator: "."))
-    substructs.forEach { parseSubstructure(dict: $0, namePath: fullPath, enumDef: newEnumDef) }
+    // Start of an enum, parse its content (substructures)
+    let newEnumDef = EnumDef(name: fqNames.joined(separator: "."))
+    substructs.forEach { parseSubstructure(dict: $0, namespaces: fqNames, currentEnum: newEnumDef) }
+    // Then print the parsed data in stdout
     print(newEnumDef.allValuesExtensionDefinition)
-  } else if let currentDef = enumDef, kind == "source.lang.swift.decl.enumelement", let caseName = name {
-    currentDef.cases.append(caseName)
-  } else if let substructs = substructs {    
-    substructs.forEach { parseSubstructure(dict: $0, namePath: fullPath, enumDef: enumDef) }
+  } else if let currentEnum = currentEnum, kind == "source.lang.swift.decl.enumelement", let caseName = name {
+    // Encoutered an enum case, add it to the current enum being parsed
+    currentEnum.cases.append(caseName)
+  } else if let substructs = substructs {
+    // Just a non-enum, non-case substructure, recurse into it to search for possible deeper enums
+    substructs.forEach { parseSubstructure(dict: $0, namespaces: fqNames, currentEnum: currentEnum) }
   }
 }
 
@@ -50,12 +56,11 @@ do {
     inputData = FileHandle.standardInput.readDataToEndOfFile()
   }
 
-  let anyJson = try JSONSerialization.jsonObject(with: inputData)
-  guard let json = anyJson as? JSON else {
+  guard let json = try JSONSerialization.jsonObject(with: inputData) as? JSON else {
     print("Unexpected JSON format")
-    exit(3)
+    exit(1)
   }
-  parseSubstructure(dict: json, namePath: [], enumDef: nil)
+  parseSubstructure(dict: json, namespaces: [], currentEnum: nil)
 } catch {
   print("Unable to read input file: \(error)")
   exit(2)
